@@ -3,10 +3,17 @@ import React, { useMemo, useState } from "react";
 import DataTable from "react-data-table-component";
 import FilterComponent from "./FilterComponent";
 import Button from 'react-bootstrap/Button';
+import { putMovie } from "../services/UserService";
 
 
 const Table = props => {
-  const [value, setValue] = useState('active');
+  const token = localStorage.getItem('mytoken');
+  const config = {
+    headers: {
+      'content-type': 'application/json',
+      'Authorization': `Token ${token}`
+    }
+  }
   const columns = [
     {
       name: "Title",
@@ -35,7 +42,7 @@ const Table = props => {
       name: "Active",
       sortable: true,
       width: '20%',
-      cell: (param) => checkActive(param)
+      cell: (param) => checkActive(param),
     },
     {
       name: "Actions",
@@ -51,12 +58,50 @@ const Table = props => {
         <Button variant="primary" onClick={() => handleEdit(param)}>
           Edit
         </Button>
-        <Button variant="danger">Delete</Button>
+        <Button onClick={() => deleteMovei(param)} variant="danger">Delete</Button>
       </>
     );
   };
 
+  const deleteMovei = (param) => {
+    if (window.confirm(`Delete? ${param.title}`)) {
+      console.log("Delete : ", param.id);
+      // window.location.href = '/listmovie';
+      filteredItems.filter(item => item.id !== param.id)
+
+    }
+
+  };
+
+  const handleChange = async (event) => {
+    const select = event.target;
+    console.log("handleChange : ", select.value);
+    const id = select.children[select.selectedIndex].id;
+    const active = select.value;
+    const tobody = JSON.stringify({ active });
+    console.log("handleChange : ", tobody);
+    const res = await putMovie(tobody, config, id);
+    console.log("handleChange : ", res);
+
+  };
+
   const checkActive = (param) => {
+    if (param && param.active === true) {
+      return (
+        <select value={true} onChange={handleChange}>
+          <option id={param.id} value={true}>Active</option>
+          <option id={param.id} value={false}>UnActive</option>
+        </select>
+      )
+    } else {
+      return (
+        <select value={false} onChange={handleChange}>
+          <option id={param.id} value={false}>UnActive</option>
+          <option id={param.id} value={true}>Active</option>
+        </select>
+      )
+    }
+
 
   }
 

@@ -4,12 +4,16 @@ const handleLoginApi = (username, password) => {
   return axios.post('/account/login/', { username, password })
 }
 
-const getAllMovie = () => {
-  console.log('================getAllUsers======================================')
-  return axios.get(`movie/liststream/`)
+const getAllMovie = (config) => {
+  return axios.get(`movie/stream/`, config)
+}
+
+const putMovie = (data, config, id) => {
+  return axios.put(`movie/stream/${id}`, data, config)
 }
 
 
 export {
-  handleLoginApi, getAllMovie
+  handleLoginApi, getAllMovie,
+  putMovie
 }

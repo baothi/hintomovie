@@ -9,7 +9,7 @@ import { Link } from 'react-router-dom';
 
 function Listmovie() {
   // let navigate = useNavigate();
-  const token = localStorage.getItem('mytoken')
+  const token = localStorage.getItem('mytoken');
   const [listMovie, setListMovie] = useState([])
   useEffect(() => {
     if (!token) {
@@ -18,8 +18,15 @@ function Listmovie() {
     }
   }, [token])
 
+  const config = {
+    headers: {
+      'content-type': 'application/json',
+      'Authorization': `Token ${token}`
+    }
+  }
+
   const getFullMovie = async () => {
-    let res = await getAllMovie();
+    let res = await getAllMovie(config);
     setListMovie(res)
   };
 
