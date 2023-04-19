@@ -129,6 +129,9 @@ const Table = props => {
   const [resetPaginationToggle, setResetPaginationToggle] = React.useState(
     false
   );
+
+  const [filterActive, setFilterActive] = useState(true)
+
   // const filteredItems = data.filter(
   //   item => item.name && item.name.includes(filterText)
   // );
@@ -137,7 +140,13 @@ const Table = props => {
       JSON.stringify(item)
         .toLowerCase()
         .indexOf(filterText.toLowerCase()) !== -1
+    // (item.title.toLowerCase().includes(filterText.toLowerCase()) ||
+    //   item.show_date.toLowerCase().includes(filterText.toLowerCase()) ||
+    //   item.close_date.toLowerCase().includes(filterText.toLowerCase()))
   );
+
+  // const filterActive = useMemo
+
 
   const subHeaderComponent = useMemo(() => {
     const handleClear = () => {
@@ -146,13 +155,23 @@ const Table = props => {
         setFilterText("");
       }
     };
+    const handleChangeItem = (event) => {
+      console.log("handleChangeItem :", event.target.value);
+      console.log("handleChangeItem :", filteredItems);
+    };
 
     return (
-      <FilterComponent
-        onFilter={e => setFilterText(e.target.value)}
-        onClear={handleClear}
-        filterText={filterText}
-      />
+      <>
+        {/* <select onChange={handleChangeItem}>
+          <option value={true}>Active</option>
+          <option value={false}>UnActive</option>
+        </select> */}
+        <FilterComponent
+          onFilter={e => setFilterText(e.target.value)}
+          onClear={handleClear}
+          filterText={filterText}
+        />
+      </>
     );
   }, [filterText, resetPaginationToggle]);
 
