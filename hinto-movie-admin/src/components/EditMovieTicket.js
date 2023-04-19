@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react'
+import React, { useState } from 'react'
 import { useEffect } from 'react'
 import Header from './Header'
 import Container from 'react-bootstrap/Container'
@@ -8,22 +8,31 @@ import moment from 'moment'
 
 import 'react-datepicker/dist/react-datepicker.css'
 import TableTicket from './DataTicketMovie'
-import { createMovie } from '../services/UserService'
+import { useNavigate, useParams } from 'react-router-dom'
+import {
+  deleteWathlist,
+  editWatchlist,
+  getMovieById,
+  putMovie
+} from '../services/UserService'
 
-const AddMovieTicket = () => {
+const EditMovieTicket = () => {
+  const navigate = useNavigate()
+  const { id } = useParams()
+  const [movieSelected, setMovieSelected] = useState(null)
+  const [watchSelected, setWatchSelected] = useState(null)
   const token = localStorage.getItem('mytoken')
   const [file, setFile] = useState()
-  const [startDate, setStartDate] = useState(new Date())
-  const [closeDate, setCloseDate] = useState(new Date())
+  const [startDate, setStartDate] = useState('')
+  const [closeDate, setCloseDate] = useState('')
   const [movieTitle, setMovieTitle] = useState('')
   const [movieSummary, setMovieSummary] = useState('')
 
   const [ticketInfo, setTicketInfo] = useState({
-    id: '',
-    date_picker: '',
-    time_show_date: '',
+    date: '',
+    time: '',
     price: '',
-    website: ''
+    link: ''
   })
   const [ticketInfoList, setTicketInfoList] = useState([])
 
@@ -34,6 +43,23 @@ const AddMovieTicket = () => {
     }
   }
 
+  const handleGetMovieById = async (id) => {
+    let res = await getMovieById(config, id)
+    setMovieSelected(res)
+    setStartDate(new Date(`${res.show_date} ${res.time_show_date}`))
+    setCloseDate(new Date(`${res.close_date} ${res.time_close_date}`))
+
+    setMovieTitle(res.title)
+    setMovieSummary(res.description)
+    setFile(res.image)
+
+    setTicketInfoList(res.watchlist)
+  }
+
+  useEffect(() => {
+    handleGetMovieById(id)
+  }, [id])
+
   useEffect(() => {
     if (!token) {
       window.location.href = '/'
@@ -42,6 +68,7 @@ const AddMovieTicket = () => {
   }, [token])
 
   function handleChange(e) {
+    // setFile(URL.createObjectURL(e.target.files[0]))
     setFile(e.target.files[0])
   }
 
@@ -51,48 +78,45 @@ const AddMovieTicket = () => {
     }
   }
 
-  const handleAddTicketInfo = () => {
-    setTicketInfoList([
-      ...ticketInfoList,
-      {
-        ...ticketInfo,
-        id: new Date().getTime(),
-        date_picker: moment(ticketInfo.date_picker).format('YYYY-MM-DD'),
-        time_show_date: ticketInfo.time_show_date
-          .toLocaleTimeString()
-          .slice(0, -3)
-      }
-    ])
-    setTicketInfo({})
+  const handleUpdateTicketInfo = async () => {
+    await editWatchlist(watchSelected, config, watchSelected.id)
+    await handleGetMovieById(id)
+    setWatchSelected(null)
   }
 
   const onEditTicketInfo = (data) => {
-    setTicketInfo({
-      ...data,
-      date_picker: new Date(data.date_picker),
-      time_show_date: new Date(`${data.date_picker} ${data.time_show_date}`)
-    })
-  }
-  const onDeleteTicketInfo = (data) => {
-    const ticketInfoListFilter = ticketInfoList.filter(
-      (tk) => tk.id !== data.id
-    )
-    setTicketInfoList(ticketInfoListFilter)
+    setWatchSelected(data)
   }
 
-  const handleCreateMovie = async () => {
-    ticketInfoList.forEach((tk) => delete tk.id)
+  const onDeleteTicketInfo = async (data) => {
+    await deleteWathlist(config, data.id)
+    handleGetMovieById(id)
+  }
+
+  const handleUpdateMovie = async () => {
     const data = {
-      title: movieTitle,
-      description: movieSummary,
+      ...movieSelected,
       image: file,
       show_date: moment(startDate).format('YYYY-MM-DD'),
       time_show_date: startDate.toLocaleTimeString().slice(0, -3),
       close_date: moment(closeDate).format('YYYY-MM-DD'),
       time_close_date: closeDate.toLocaleTimeString().slice(0, -3),
-      watchlist: ticketInfoList
+      title: movieTitle,
+      description: movieSummary
     }
-    await createMovie(data, config)
+
+    if (typeof data.image === 'string') {
+      delete data.image
+    }
+    await putMovie(data, config, id)
+    navigate('/listmovie')
+  }
+
+  const handleClearAllTicketInfo = () => {
+    movieSelected.watchlist.forEach(async (w) => {
+      await deleteWathlist(config, w.id)
+    })
+    handleGetMovieById(id)
   }
 
   return (
@@ -102,11 +126,20 @@ const AddMovieTicket = () => {
       <br />
       <div className="container mt-5 movie-ticket">
         <div className="mb-3">
-          <h2>Add Image</h2>
-          <img src={file ? URL.createObjectURL(file) : ''} />
+          <h2>Edit Image</h2>
+          <img
+            src={
+              file
+                ? typeof file === 'string'
+                  ? file
+                  : URL.createObjectURL(file)
+                : ''
+            }
+            className="mx-2 rounded"
+          />
           <input type="file" onChange={handleChange} />
-          <button onClick={handleCreateMovie} className="btn btn-success">
-            Create Movie
+          <button onClick={handleUpdateMovie} className="btn btn-success">
+            Save
           </button>
         </div>
         <div className="mb-3">
@@ -156,13 +189,13 @@ const AddMovieTicket = () => {
           <h3>Ticket Information</h3>
           <div>
             <button
-              onClick={handleAddTicketInfo}
+              onClick={handleUpdateTicketInfo}
               className="btn btn-success mx-2"
             >
               Save
             </button>
             <button
-              onClick={() => setTicketInfoList([])}
+              onClick={handleClearAllTicketInfo}
               className="btn btn-danger"
             >
               Clear
@@ -173,11 +206,13 @@ const AddMovieTicket = () => {
         <div className="mb-3">
           <h2>Date picker</h2>
           <DatePicker
-            selected={ticketInfo.date_picker}
+            selected={
+              watchSelected ? new Date(watchSelected?.date_picker) : null
+            }
             onChange={(date) => {
-              setTicketInfo({
-                ...ticketInfo,
-                date_picker: date
+              setWatchSelected({
+                ...watchSelected,
+                date_picker: moment(date).format('YYYY-MM-DD')
               })
             }}
             timeIntervals={15}
@@ -190,11 +225,17 @@ const AddMovieTicket = () => {
         <div className="mb-3">
           <h2>Time</h2>
           <DatePicker
-            selected={ticketInfo.time_show_date}
+            selected={
+              watchSelected
+                ? new Date(
+                    `${watchSelected?.date_picker} ${watchSelected?.time_show_date}`
+                  )
+                : null
+            }
             onChange={(date) => {
-              setTicketInfo({
-                ...ticketInfo,
-                time_show_date: date
+              setWatchSelected({
+                ...watchSelected,
+                time_show_date: date.toLocaleTimeString().slice(0, -3)
               })
             }}
             showTimeSelect
@@ -212,15 +253,15 @@ const AddMovieTicket = () => {
           <h2>Price</h2>
           <input
             onChange={(e) => {
-              setTicketInfo({
-                ...ticketInfo,
+              setWatchSelected({
+                ...watchSelected,
                 price: Number(e.target.value)
               })
             }}
             name="price"
             className="text-center"
             autoComplete="off"
-            value={ticketInfo?.price || ''}
+            value={watchSelected?.price || ''}
           />
         </div>
 
@@ -228,15 +269,15 @@ const AddMovieTicket = () => {
           <h2>Link to ticket</h2>
           <input
             onChange={(e) => {
-              setTicketInfo({
-                ...ticketInfo,
+              setWatchSelected({
+                ...watchSelected,
                 website: e.target.value
               })
             }}
-            name="website"
+            name="link"
             className="text-center"
             autoComplete="off"
-            value={ticketInfo?.website || ''}
+            value={watchSelected?.website || ''}
           />
         </div>
         <div className="mb-3"></div>
@@ -250,4 +291,4 @@ const AddMovieTicket = () => {
   )
 }
 
-export default AddMovieTicket
+export default EditMovieTicket
