@@ -28,6 +28,10 @@ const deleteWathlist = (config, id) => {
   return axios.delete(`/movie/watch-list/${id}`, config)
 }
 
+const addWatchlist = (data, config) => {
+  return axios.post(`/movie/watch-list/`, data, config)
+}
+
 // const putMovie = (config, id) => {
 //   return axios.get(`movie/stream/${id}`, config)
 // }
@@ -39,5 +43,6 @@ export {
   getMovieById,
   editWatchlist,
   deleteWathlist,
-  createMovie
+  createMovie,
+  addWatchlist
 }

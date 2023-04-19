@@ -10,6 +10,7 @@ import 'react-datepicker/dist/react-datepicker.css'
 import TableTicket from './DataTicketMovie'
 import { useNavigate, useParams } from 'react-router-dom'
 import {
+  addWatchlist,
   deleteWathlist,
   editWatchlist,
   getMovieById,
@@ -79,9 +80,28 @@ const EditMovieTicket = () => {
   }
 
   const handleUpdateTicketInfo = async () => {
-    await editWatchlist(watchSelected, config, watchSelected.id)
+    if (watchSelected) {
+      await editWatchlist(watchSelected, config, watchSelected.id)
+    } else {
+      await addWatchlist(
+        {
+          date_picker: moment(ticketInfo.date).format('YYYY-MM-DD'),
+          price: Number(ticketInfo.price),
+          website: ticketInfo.link,
+          time_show_date: ticketInfo.time.toLocaleTimeString().slice(0, -3),
+          platform: id
+        },
+        config
+      )
+    }
     await handleGetMovieById(id)
     setWatchSelected(null)
+    setTicketInfo({
+      date: '',
+      time: '',
+      price: '',
+      link: ''
+    })
   }
 
   const onEditTicketInfo = (data) => {
@@ -112,11 +132,14 @@ const EditMovieTicket = () => {
     navigate('/listmovie')
   }
 
-  const handleClearAllTicketInfo = () => {
-    movieSelected.watchlist.forEach(async (w) => {
-      await deleteWathlist(config, w.id)
+  const handleClearAllTicketInfo = async () => {
+    setTicketInfo({
+      date: '',
+      time: '',
+      price: '',
+      link: ''
     })
-    handleGetMovieById(id)
+    setWatchSelected(null)
   }
 
   return (
@@ -207,13 +230,20 @@ const EditMovieTicket = () => {
           <h2>Date picker</h2>
           <DatePicker
             selected={
-              watchSelected ? new Date(watchSelected?.date_picker) : null
+              watchSelected
+                ? new Date(watchSelected?.date_picker)
+                : ticketInfo.date
             }
             onChange={(date) => {
-              setWatchSelected({
-                ...watchSelected,
-                date_picker: moment(date).format('YYYY-MM-DD')
-              })
+              watchSelected
+                ? setWatchSelected({
+                    ...watchSelected,
+                    date_picker: moment(date).format('YYYY-MM-DD')
+                  })
+                : setTicketInfo({
+                    ...ticketInfo,
+                    date
+                  })
             }}
             timeIntervals={15}
             timeCaption="Time"
@@ -230,13 +260,18 @@ const EditMovieTicket = () => {
                 ? new Date(
                     `${watchSelected?.date_picker} ${watchSelected?.time_show_date}`
                   )
-                : null
+                : ticketInfo.time
             }
             onChange={(date) => {
-              setWatchSelected({
-                ...watchSelected,
-                time_show_date: date.toLocaleTimeString().slice(0, -3)
-              })
+              watchSelected
+                ? setWatchSelected({
+                    ...watchSelected,
+                    time_show_date: date.toLocaleTimeString().slice(0, -3)
+                  })
+                : setTicketInfo({
+                    ...ticketInfo,
+                    time: date
+                  })
             }}
             showTimeSelect
             showTimeSelectOnly
@@ -253,15 +288,20 @@ const EditMovieTicket = () => {
           <h2>Price</h2>
           <input
             onChange={(e) => {
-              setWatchSelected({
-                ...watchSelected,
-                price: Number(e.target.value)
-              })
+              watchSelected
+                ? setWatchSelected({
+                    ...watchSelected,
+                    price: Number(e.target.value)
+                  })
+                : setTicketInfo({
+                    ...ticketInfo,
+                    price: e.target.value
+                  })
             }}
             name="price"
             className="text-center"
             autoComplete="off"
-            value={watchSelected?.price || ''}
+            value={watchSelected ? watchSelected?.price : ticketInfo.price}
           />
         </div>
 
@@ -269,15 +309,20 @@ const EditMovieTicket = () => {
           <h2>Link to ticket</h2>
           <input
             onChange={(e) => {
-              setWatchSelected({
-                ...watchSelected,
-                website: e.target.value
-              })
+              watchSelected
+                ? setWatchSelected({
+                    ...watchSelected,
+                    website: e.target.value
+                  })
+                : setTicketInfo({
+                    ...ticketInfo,
+                    link: e.target.value
+                  })
             }}
             name="link"
             className="text-center"
             autoComplete="off"
-            value={watchSelected?.website || ''}
+            value={watchSelected ? watchSelected?.website : ticketInfo.link}
           />
         </div>
         <div className="mb-3"></div>

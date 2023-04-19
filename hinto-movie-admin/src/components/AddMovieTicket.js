@@ -162,7 +162,15 @@ const AddMovieTicket = () => {
               Save
             </button>
             <button
-              onClick={() => setTicketInfoList([])}
+              onClick={() =>
+                setTicketInfo({
+                  id: '',
+                  date_picker: '',
+                  time_show_date: '',
+                  price: '',
+                  website: ''
+                })
+              }
               className="btn btn-danger"
             >
               Clear
