@@ -159,10 +159,10 @@ const Table = props => {
 
     return (
       <>
-        <select onChange={handleChangeItem}>
+        {/* <select onChange={handleChangeItem}>
           <option value={true}>Active</option>
           <option value={false}>UnActive</option>
-        </select>
+        </select> */}
         <FilterComponent
           onFilter={e => setFilterText(e.target.value)}
           onClear={handleClear}
