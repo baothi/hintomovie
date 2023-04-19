@@ -71,3 +71,5 @@ This section has moved here: [https://facebook.github.io/create-react-app/docs/t
 
 https://codesandbox.io/examples/package/react-data-table-component
 https://react-data-table-component.netlify.app/?path=/docs/conditional-rows-rows--rows
+https://codesandbox.io/s/react-data-table-mini-graph-ibgs6?file=/src/App.js:1027-1089
+https://codesandbox.io/s/wtm-21-48ktj
